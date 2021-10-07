@@ -35,3 +35,7 @@ func (f *FMDeemph) Work(data []float32) []float32 {
 func (f *FMDeemph) WorkBuffer(input, output []float32) int {
 	return f.iir.FilterArrayBuffer(input, output)
 }
+
+func (f *FMDeemph) PredictOutputSize(inputSize int) int {
+	return inputSize
+}

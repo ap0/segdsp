@@ -1,10 +1,11 @@
 package demodcore
 
 import (
-	"github.com/racerxdl/segdsp/dsp"
-	"github.com/racerxdl/segdsp/eventmanager"
 	"log"
 	"math"
+
+	"github.com/racerxdl/segdsp/dsp"
+	"github.com/racerxdl/segdsp/eventmanager"
 )
 
 type FMDemod struct {

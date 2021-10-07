@@ -1,6 +1,7 @@
 package dsp
 
 type Interpolator struct {
+	sampleHistory      []complex64
 	fir                *FirFilter
 	interpolationRatio int
 }
@@ -9,21 +10,33 @@ func MakeInterpolator(interpolationRatio int) *Interpolator {
 	return &Interpolator{
 		fir:                MakeFirFilter(MakeLowPassFixed(1, 1, 1/float64(interpolationRatio*2), 63)),
 		interpolationRatio: interpolationRatio,
+		sampleHistory:      make([]complex64, 1),
 	}
 }
 
 func (f *Interpolator) Work(data []complex64) []complex64 {
+	samples := append(f.sampleHistory, data...)
+
 	var output = make([]complex64, len(data)*f.interpolationRatio)
 
 	for i := 0; i < len(data); i++ {
 		var idx = i * f.interpolationRatio
-		output[idx] = data[i]
+		output[idx] = samples[i]
+		next := samples[i+1]
+
+		dr := float64(real(next) - real(samples[i]))
+		di := float64(imag(next) - imag(samples[i]))
+
 		for j := 1; j < f.interpolationRatio; j++ {
-			output[idx+j] = complex(0, 0)
+			mult := float64(j) / float64(f.interpolationRatio)
+			output[idx+j] = complex(
+				real(samples[i])+float32(dr*mult),
+				imag(samples[i])+float32(di*mult))
 		}
 	}
 
 	f.fir.Filter(output, len(output))
+	f.sampleHistory = samples[len(data):]
 	return output
 }
 

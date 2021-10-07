@@ -1,9 +1,10 @@
 package dsp
 
 import (
+	"math"
+
 	"github.com/racerxdl/segdsp/dsp/native"
 	"github.com/racerxdl/segdsp/tools"
-	"math"
 )
 
 func Min(a, b int) int {
