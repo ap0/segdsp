@@ -115,6 +115,7 @@ func (f *CTFirFilter) FilterDecimateOut(data []complex64, decimate int) []comple
 func (f *CTFirFilter) FilterDecimateBuffer(input, output []complex64, decimate int) int {
 	var samples = append(f.sampleHistory, input...)
 	var length = len(input) / decimate
+	var remainder = len(input) % decimate
 
 	if len(output) < length {
 		panic("There is not enough space in output buffer")
@@ -128,7 +129,7 @@ func (f *CTFirFilter) FilterDecimateBuffer(input, output []complex64, decimate i
 		}
 		output[i] = ComplexDotProductResult(sl, f.taps)
 	}
-	f.sampleHistory = samples[len(samples)-f.tapsLen:]
+	f.sampleHistory = samples[len(input)-remainder:]
 	return length
 }
 
