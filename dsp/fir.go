@@ -74,8 +74,8 @@ func (f *FirFilter) FilterDecimate(data []complex64, decimate int, length int) {
 
 func (f *FirFilter) FilterDecimateBuffer(input, output []complex64, decimate int) int {
 	var samples = append(f.sampleHistory, input...)
-	var length = len(input) / decimate
-	var remainder = len(input) % decimate
+	var length = len(samples) / decimate
+	var remainder = len(samples) % decimate
 
 	if len(output) < length {
 		panic("There is not enough space in output buffer")
@@ -85,28 +85,36 @@ func (f *FirFilter) FilterDecimateBuffer(input, output []complex64, decimate int
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
+			for j := len(f.taps); j > 0; j -= decimate {
+				length--
+				remainder += decimate
+			}
 			break
 		}
 		output[i] = DotProductResult(sl, f.taps)
 	}
-	f.sampleHistory = samples[len(input)-remainder:]
+	f.sampleHistory = samples[len(samples)-remainder:]
 	return length
 }
 
 func (f *FirFilter) FilterDecimateOut(data []complex64, decimate int) []complex64 {
 	var samples = append(f.sampleHistory, data...)
-	var length = len(data) / decimate
-	var remainder = len(data) % decimate
+	var length = len(samples) / decimate
+	var remainder = len(samples) % decimate
 	var output = make([]complex64, length)
 	for i := 0; i < length; i++ {
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
+			for j := len(sl); j > 0; j -= decimate {
+				length--
+				remainder += decimate
+			}
 			break
 		}
 		output[i] = DotProductResult(sl, f.taps)
 	}
-	f.sampleHistory = samples[len(data)-remainder:]
+	f.sampleHistory = samples[len(samples)-remainder:]
 	return output
 }
 
@@ -130,7 +138,7 @@ func (f *FirFilter) WorkBuffer(input, output []complex64) int {
 }
 
 func (f *FirFilter) PredictOutputSize(inputLength int) int {
-	return inputLength / f.decimation
+	return inputLength/f.decimation + 2
 }
 
 // endregion
@@ -203,24 +211,29 @@ func (f *FloatFirFilter) FilterDecimate(data []float32, decimate int, length int
 
 func (f *FloatFirFilter) FilterDecimateOut(data []float32, decimate int) []float32 {
 	var samples = append(f.sampleHistory, data...)
-	var length = len(data) / decimate
-	var remainder = len(data) % decimate
+	var length = len(samples) / decimate
+	var remainder = len(samples) % decimate
 	var output = make([]float32, length)
 	for i := 0; i < length; i++ {
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
+			for j := len(sl); j > 0; j -= decimate {
+				length--
+				remainder += decimate
+			}
 			break
 		}
 		output[i] = DotProductFloatResult(sl, f.taps)
 	}
-	f.sampleHistory = samples[len(data)-remainder:]
+	f.sampleHistory = samples[len(samples)-remainder:]
 	return output
 }
 
 func (f *FloatFirFilter) FilterDecimateBuffer(input, output []float32, decimate int) int {
 	var samples = append(f.sampleHistory, input...)
-	var length = len(input) / decimate
+	var length = len(samples) / decimate
+	var remainder = len(samples) % decimate
 
 	if len(output) < length {
 		panic("There is not enough space in output buffer")
@@ -230,7 +243,7 @@ func (f *FloatFirFilter) FilterDecimateBuffer(input, output []float32, decimate 
 		var srcIdx = decimate * i
 		output[i] = DotProductFloatResult(samples[srcIdx:], f.taps)
 	}
-	f.sampleHistory = samples[len(samples)-f.tapsLen:]
+	f.sampleHistory = samples[len(samples)-remainder:]
 
 	return length
 }
@@ -265,7 +278,7 @@ func (f *FloatFirFilter) PredictOutputSize(inputLength int) int {
 	if f.decimation == 0 {
 		f.decimation = 1
 	}
-	return inputLength / f.decimation
+	return inputLength/f.decimation + 2
 }
 
 // endregion

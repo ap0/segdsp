@@ -92,30 +92,29 @@ func (f *CTFirFilter) FilterDecimate(data []complex64, decimate int, length int)
 
 func (f *CTFirFilter) FilterDecimateOut(data []complex64, decimate int) []complex64 {
 	var samples = append(f.sampleHistory, data...)
-	var length = len(data) / decimate
-	var remainder = len(data) % decimate
+	var length = len(samples) / decimate
+	var remainder = len(samples) % decimate
 	var output = make([]complex64, length)
 	for i := 0; i < length; i++ {
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
+			for j := len(sl); j > 0; j -= decimate {
+				length--
+				remainder += decimate
+			}
 			break
 		}
 		output[i] = ComplexDotProductResult(sl, f.taps)
 	}
-	f.sampleHistory = samples[len(data)-remainder:]
-	// log.Println("remainder: ", remainder)
-	// log.Println("decimate: ", decimate)
-	// log.Println("len(data): ", len(data))
-	// log.Println("len(taps): ", f.tapsLen)
-	// log.Println("len(sampleHistory): ", len(f.sampleHistory))
+	f.sampleHistory = samples[len(samples)-remainder:]
 	return output
 }
 
 func (f *CTFirFilter) FilterDecimateBuffer(input, output []complex64, decimate int) int {
 	var samples = append(f.sampleHistory, input...)
-	var length = len(input) / decimate
-	var remainder = len(input) % decimate
+	var length = len(samples) / decimate
+	var remainder = len(samples) % decimate
 
 	if len(output) < length {
 		panic("There is not enough space in output buffer")
@@ -125,11 +124,16 @@ func (f *CTFirFilter) FilterDecimateBuffer(input, output []complex64, decimate i
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
+			// log.Printf("len(sl) %d len(taps) %d decimate %d", len(sl), len(f.taps), decimate)
+			for j := len(sl); j > 0; j -= decimate {
+				length--
+				remainder += decimate
+			}
 			break
 		}
 		output[i] = ComplexDotProductResult(sl, f.taps)
 	}
-	f.sampleHistory = samples[len(input)-remainder:]
+	f.sampleHistory = samples[len(samples)-remainder:]
 	return length
 }
 
@@ -139,7 +143,8 @@ func (f *CTFirFilter) SetTaps(taps []complex64) {
 }
 
 func (f *CTFirFilter) PredictOutputSize(inputLength int) int {
-	return inputLength / f.decimation
+	// give extra space
+	return inputLength/f.decimation + 1
 }
 
 // endregion
