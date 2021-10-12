@@ -99,10 +99,12 @@ func (f *CTFirFilter) FilterDecimateOut(data []complex64, decimate int) []comple
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
-			for j := len(sl); j > 0; j -= decimate {
-				length--
-				remainder += decimate
+			div := len(sl) / decimate
+			if len(sl)%decimate > 0 {
+				div++
 			}
+			length -= div
+			remainder += div * decimate
 			break
 		}
 		output[i] = ComplexDotProductResult(sl, f.taps)
@@ -124,11 +126,12 @@ func (f *CTFirFilter) FilterDecimateBuffer(input, output []complex64, decimate i
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
-			// log.Printf("len(sl) %d len(taps) %d decimate %d", len(sl), len(f.taps), decimate)
-			for j := len(sl); j > 0; j -= decimate {
-				length--
-				remainder += decimate
+			div := len(sl) / decimate
+			if len(sl)%decimate > 0 {
+				div++
 			}
+			length -= div
+			remainder += div * decimate
 			break
 		}
 		output[i] = ComplexDotProductResult(sl, f.taps)

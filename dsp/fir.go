@@ -85,10 +85,12 @@ func (f *FirFilter) FilterDecimateBuffer(input, output []complex64, decimate int
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
-			for j := len(f.taps); j > 0; j -= decimate {
-				length--
-				remainder += decimate
+			div := len(sl) / decimate
+			if len(sl)%decimate > 0 {
+				div++
 			}
+			length -= div
+			remainder += div * decimate
 			break
 		}
 		output[i] = DotProductResult(sl, f.taps)
@@ -106,10 +108,12 @@ func (f *FirFilter) FilterDecimateOut(data []complex64, decimate int) []complex6
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
-			for j := len(sl); j > 0; j -= decimate {
-				length--
-				remainder += decimate
+			div := len(sl) / decimate
+			if len(sl)%decimate > 0 {
+				div++
 			}
+			length -= div
+			remainder += div * decimate
 			break
 		}
 		output[i] = DotProductResult(sl, f.taps)
@@ -218,10 +222,12 @@ func (f *FloatFirFilter) FilterDecimateOut(data []float32, decimate int) []float
 		var srcIdx = decimate * i
 		var sl = samples[srcIdx:]
 		if len(sl) < len(f.taps) {
-			for j := len(sl); j > 0; j -= decimate {
-				length--
-				remainder += decimate
+			div := len(sl) / decimate
+			if len(sl)%decimate > 0 {
+				div++
 			}
+			length -= div
+			remainder += div * decimate
 			break
 		}
 		output[i] = DotProductFloatResult(sl, f.taps)
@@ -241,6 +247,16 @@ func (f *FloatFirFilter) FilterDecimateBuffer(input, output []float32, decimate 
 
 	for i := 0; i < length; i++ {
 		var srcIdx = decimate * i
+		var sl = samples[srcIdx:]
+		if len(sl) < len(f.taps) {
+			div := len(sl) / decimate
+			if len(sl)%decimate > 0 {
+				div++
+			}
+			length -= div
+			remainder += div * decimate
+			break
+		}
 		output[i] = DotProductFloatResult(samples[srcIdx:], f.taps)
 	}
 	f.sampleHistory = samples[len(samples)-remainder:]
